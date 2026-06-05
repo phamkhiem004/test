@@ -16,7 +16,7 @@ async def create_todo(
         user_id=user_id,
     )
     db.add(todo)
-    await db.flush()
+    await db.commit()
     await db.refresh(todo)
     return todo
 
@@ -28,7 +28,7 @@ async def get_todos(
     limit: int = 20,
 ) -> tuple[list[Todo], int]:
     """Get all todos with pagination for a specific user."""
-    query = select(Todo).where(Todo.user_id == user_id).offset(skip).limit(limit)
+    query = select(Todo).where(Todo.user_id == user_id).order_by(Todo.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(query)
     todos = list(result.scalars().all())
 
@@ -47,11 +47,11 @@ async def get_todo_by_id(db: AsyncSession, todo_id: uuid.UUID) -> Todo | None:
 async def update_todo(db: AsyncSession, todo: Todo, update_data: dict) -> Todo:
     for key, value in update_data.items():
         setattr(todo, key, value)
-    await db.flush()
+    await db.commit()
     await db.refresh(todo)
     return todo
 
 
 async def delete_todo(db: AsyncSession, todo: Todo) -> None:
     await db.delete(todo)
-    await db.flush()
+    await db.commit()
