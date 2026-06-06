@@ -33,6 +33,13 @@ class RedisClient:
 
     async def exists(self, key: str) -> bool:
         return await self._redis.exists(key)
+    async def delete_pattern(self, pattern: str):
+        # SCAN tìm tất cả key khớp pattern, sau đó xóa
+        keys = []
+        async for key in self._redis.scan_iter(pattern):
+            keys.append(key)
+        if keys:
+            await self._redis.delete(*keys)
 
 
 redis_client = RedisClient()
