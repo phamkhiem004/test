@@ -10,8 +10,15 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export function TodoPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { data, isLoading, error } = useTodos();
+  const [page, setPage] = useState(1);
+  const handleCreateSuccess = () => {
+    setShowCreateForm(false);
+    setPage(1);
+  };
+  const { data, isLoading, error } = useTodos(page, 20);
   const { user, logout } = useAuth();
+
+  const totalPages = data ? Math.ceil(data.total / 20) : 1;
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -57,21 +64,45 @@ export function TodoPage() {
 
             {data && <TodoList todos={data.items} />}
 
+            {/* ✅ Thêm pagination controls */}
             {data && data.total > 0 && (
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                Showing {data.items.length} of {data.total} todos
-              </div>
+                <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                  Showing {data.items.length} of {data.total} todos
+                </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => p - 1)}
+                        disabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span>
+                    Page {page} of {totalPages}
+                  </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => p + 1)}
+                        disabled={page >= totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
             )}
           </CardContent>
         </Card>
       </main>
 
-      {/* Create Todo Dialog */}
       <TodoForm
-        mode="create"
-        open={showCreateForm}
-        onClose={() => setShowCreateForm(false)}
+          mode="create"
+          open={showCreateForm}
+          onClose={handleCreateSuccess}
       />
     </div>
   );
+
 }
